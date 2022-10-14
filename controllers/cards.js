@@ -55,11 +55,11 @@ const putLike = (req, res) => {
       res.status(201).send(like);
     })
     .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.', err });
-      }
       if (err.message === 'NotFound') {
         return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+      }
+      if (err instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.', err });
       }
       return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
     });
@@ -78,11 +78,11 @@ const deleteLike = (req, res) => {
       res.status(200).send(like);
     })
     .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.', err });
-      }
       if (err.message === 'NotFound') {
         return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+      }
+      if (err instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.', err });
       }
       return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
     });
