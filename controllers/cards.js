@@ -22,7 +22,7 @@ const createCard = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        return res.status(400).send({ message: 'Запрос был неправильно сформирован', err });
+        return res.status(400).send({ message: 'Переданы некорректные данные при создании карточки', err });
       }
       return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
     });
@@ -30,11 +30,16 @@ const createCard = (req, res) => {
 
 // удаляет карточку по идентификатору
 const deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findByIdAndRemove(req.params.cardId).orFail(new Error('NotFound'))
     .then(() => {
       res.status(200).send({ message: 'Пост удален' });
     })
-    .catch((err) => res.status(500).send({ message: 'Ошибка на стороне сервера', err }));
+    .catch((err) => {
+      if (err.message === 'NotFound') {
+        return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
+      }
+      return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
+    });
 };
 
 // поставить лайк карточке
@@ -45,12 +50,18 @@ const putLike = (req, res) => {
     { $addToSet: { likes: owner } }, // добавить _id в массив, если его там нет
     { new: true },
   )
-    .populate('owner')
+    .populate('owner').orFail(new Error('NotFound'))
     .then((like) => {
       res.status(201).send(like);
     })
     .catch((err) => {
-      res.status(500).send({ message: 'Ошибка на стороне сервера', err });
+      if (err instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.', err });
+      }
+      if (err.message === 'NotFound') {
+        return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+      }
+      return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
     });
 };
 
@@ -62,12 +73,18 @@ const deleteLike = (req, res) => {
     { $pull: { likes: owner } }, // убрать _id из массива
     { new: true },
   )
-    .populate('owner')
+    .populate('owner').orFail(new Error('NotFound'))
     .then((like) => {
       res.status(200).send(like);
     })
     .catch((err) => {
-      res.status(500).send({ message: 'Ошибка на стороне сервера', err });
+      if (err instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.', err });
+      }
+      if (err.message === 'NotFound') {
+        return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+      }
+      return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
     });
 };
 
