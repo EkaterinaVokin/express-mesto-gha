@@ -18,6 +18,11 @@ app.use((req, res, next) => {
 app.use('/', require('./routes/users'));
 app.use('/', require('./routes/cards'));
 
+// обработка несуществующих маршрутов
+app.use('*', (req, res) => {
+  res.status(400).send({ message: 'Запрашиваемый ресур не найден' });
+});
+
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.listen(PORT, () => {
