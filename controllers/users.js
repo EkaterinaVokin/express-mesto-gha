@@ -1,18 +1,20 @@
 const { default: mongoose } = require('mongoose');
 const User = require('../models/user');
 
+// возвращает всех пользователей
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => {
-      res.send(users);
+      res.status(200).send(users);
     })
     .catch((err) => res.status(500).send({ message: 'Ошибка на стороне сервера', err }));
 };
 
+// возвращает пользователя по _id
 const getUserById = (req, res) => {
-  User.findById(req.params.id).orFail(new Error('NotFound'))
+  User.findById(req.params.userId).orFail(new Error('NotFound'))
     .then((user) => {
-      res.send(user);
+      res.status(200).send(user);
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
@@ -25,6 +27,7 @@ const getUserById = (req, res) => {
     });
 };
 
+// создаёт пользователя
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
