@@ -4,6 +4,7 @@ const Card = require('../models/card');
 // возвращает все карточки
 const getCards = (req, res) => {
   Card.find({})
+    .populate('owner')
     .then((cards) => {
       res.status(200).send(cards);
     })
@@ -15,6 +16,7 @@ const createCard = (req, res) => {
   const owner = req.user._id; // _id пользователя
   const { name, link } = req.body;
   Card.create({ name, link, owner })
+    .then((card) => card.populate('owner'))
     .then((card) => {
       res.status(201).send(card);
     })
@@ -29,14 +31,50 @@ const createCard = (req, res) => {
 // удаляет карточку по идентификатору
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => {
-      res.status(200).send(card);
+    .then(() => {
+      res.status(200).send({ message: 'Пост удален' });
     })
     .catch((err) => res.status(500).send({ message: 'Ошибка на стороне сервера', err }));
+};
+
+// поставить лайк карточке
+const putLike = (req, res) => {
+  const owner = req.user._id; // _id пользователя
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $addToSet: { likes: owner } }, // добавить _id в массив, если его там нет
+    { new: true },
+  )
+    .populate('owner')
+    .then((like) => {
+      res.status(201).send(like);
+    })
+    .catch((err) => {
+      res.status(500).send({ message: 'Ошибка на стороне сервера', err });
+    });
+};
+
+// убрать лайк с карточки
+const deleteLike = (req, res) => {
+  const owner = req.user._id; // _id пользователя
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: owner } }, // убрать _id из массива
+    { new: true },
+  )
+    .populate('owner')
+    .then((like) => {
+      res.status(200).send(like);
+    })
+    .catch((err) => {
+      res.status(500).send({ message: 'Ошибка на стороне сервера', err });
+    });
 };
 
 module.exports = {
   getCards,
   createCard,
   deleteCard,
+  putLike,
+  deleteLike,
 };
