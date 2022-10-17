@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { ERROR_NOT_FOUND } = require('./constants');
 
 const app = express();
 
@@ -20,11 +21,11 @@ app.use('/', require('./routes/cards'));
 
 // обработка несуществующих маршрутов
 app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Запрашиваемый ресур не найден' });
+  res.status(ERROR_NOT_FOUND).send({ message: 'Запрашиваемый ресурс не найден' });
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.listen(PORT, () => {
-  console.log('Ссылка на сервер');
+  console.log('Сервера запущен на порту:', PORT);
 });

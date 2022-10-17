@@ -1,5 +1,6 @@
 const { default: mongoose } = require('mongoose');
 const Card = require('../models/card');
+const { ERROR_NOT_FOUND, ERROR_BAD_REQUEST, ERROR_INTERNAL } = require('../constants');
 
 // возвращает все карточки
 const getCards = (req, res) => {
@@ -8,7 +9,7 @@ const getCards = (req, res) => {
     .then((cards) => {
       res.send(cards);
     })
-    .catch((err) => res.status(500).send({ message: 'Ошибка на стороне сервера', err }));
+    .catch(() => res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' }));
 };
 
 // создаёт карточку
@@ -22,9 +23,9 @@ const createCard = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        return res.status(400).send({ message: 'Переданы некорректные данные при создании карточки', err });
+        return res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки' });
       }
-      return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
+      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
     });
 };
 
@@ -36,12 +37,12 @@ const deleteCard = (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
+        return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена.' });
       }
       if (err instanceof mongoose.Error.CastError) {
-        return res.status(400).send({ message: 'Удаление карточки с некорректным id', err });
+        return res.status(ERROR_BAD_REQUEST).send({ message: 'Удаление карточки с некорректным id' });
       }
-      return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
+      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
     });
 };
 
@@ -59,12 +60,12 @@ const putLike = (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+        return res.status(ERROR_NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
       }
       if (err instanceof mongoose.Error.CastError) {
-        return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.', err });
+        return res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.' });
       }
-      return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
+      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
     });
 };
 
@@ -82,12 +83,12 @@ const deleteLike = (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+        return res.status(ERROR_NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
       }
       if (err instanceof mongoose.Error.CastError) {
-        return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.', err });
+        return res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.' });
       }
-      return res.status(500).send({ message: 'Ошибка на стороне сервера', err });
+      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
     });
 };
 
