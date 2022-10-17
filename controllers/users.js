@@ -5,7 +5,7 @@ const User = require('../models/user');
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => {
-      res.status(200).send(users);
+      res.send(users);
     })
     .catch((err) => res.status(500).send({ message: 'Ошибка на стороне сервера', err }));
 };
@@ -14,7 +14,7 @@ const getUsers = (req, res) => {
 const getUserById = (req, res) => {
   User.findById(req.params.userId).orFail(new Error('NotFound'))
     .then((user) => {
-      res.status(200).send(user);
+      res.send(user);
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
@@ -48,7 +48,7 @@ const updateProfile = (req, res) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(owner, { name, about }, { new: true, runValidators: true }).orFail(new Error('NotFound'))
     .then((newUser) => {
-      res.status(200).send(newUser);
+      res.send(newUser);
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
@@ -67,7 +67,7 @@ const updateAvatar = (req, res) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(owner, { avatar }, { new: true, runValidators: true }).orFail(new Error('NotFound'))
     .then((newAvatar) => {
-      res.status(200).send(newAvatar);
+      res.send(newAvatar);
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {

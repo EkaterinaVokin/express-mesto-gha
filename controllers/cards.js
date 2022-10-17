@@ -6,7 +6,7 @@ const getCards = (req, res) => {
   Card.find({})
     .populate('owner')
     .then((cards) => {
-      res.status(200).send(cards);
+      res.send(cards);
     })
     .catch((err) => res.status(500).send({ message: 'Ошибка на стороне сервера', err }));
 };
@@ -32,7 +32,7 @@ const createCard = (req, res) => {
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId).orFail(new Error('NotFound'))
     .then(() => {
-      res.status(200).send({ message: 'Пост удален' });
+      res.send({ message: 'Пост удален' });
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
@@ -78,7 +78,7 @@ const deleteLike = (req, res) => {
   )
     .populate('owner').orFail(new Error('NotFound'))
     .then((like) => {
-      res.status(200).send(like);
+      res.send(like);
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
