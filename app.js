@@ -1,10 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const helmet = require('helmet'); // модуль для защиты приложения известных веб-уязвимостей
 const { ERROR_NOT_FOUND } = require('./constants');
 
 const app = express();
 
 app.use(express.json());
+
+app.use(helmet());
 
 const { PORT = 3000 } = process.env;
 
@@ -27,5 +30,5 @@ app.use('*', (req, res) => {
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.listen(PORT, () => {
-  console.log('Сервера запущен на порту:', PORT);
+  console.log('Сервер запущен на порту:', PORT);
 });

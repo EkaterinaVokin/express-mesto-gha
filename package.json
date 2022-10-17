@@ -20,6 +20,7 @@
   "homepage": "https://github.com/EkaterinaVokin/express-mesto-gha#readme",
   "dependencies": {
     "express": "^4.18.2",
+    "helmet": "^6.0.0",
     "mongoose": "^6.6.5",
     "validator": "^13.7.0"
   },
