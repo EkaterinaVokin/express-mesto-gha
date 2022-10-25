@@ -2,7 +2,9 @@ const { default: mongoose } = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { ERROR_NOT_FOUND, ERROR_BAD_REQUEST, ERROR_INTERNAL } = require('../constants');
+const {
+  ERROR_NOT_FOUND, ERROR_BAD_REQUEST, ERROR_INTERNAL, JWT_SECRET,
+} = require('../constants');
 
 // возвращает всех пользователей
 const getUsers = (req, res) => {
@@ -108,7 +110,7 @@ const login = (req, res) => {
           if (!matched) {
             return Promise.reject(new Error('Неправильные почта или пароль')); // хеши не совпали — отклоняем промис
           }
-          const token = jwt.sign({ _id: user._id }, { expiresIn: '7d' }); // создаем токен если совпали емаил и пароль
+          const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' }); // создаем токен если совпали емаил и пароль
           return token; // возвращаем токен
         });
     })
