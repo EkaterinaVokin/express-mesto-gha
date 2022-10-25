@@ -31,8 +31,16 @@ const getUserById = (req, res) => {
 
 // создаёт пользователя
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    // eslint-disable-next-line arrow-body-style
+    .then((hash) => {
+      return User.create({
+        name, about, avatar, email, password: hash,
+      });
+    })
     .then((user) => {
       res.status(201).send(user);
     })
