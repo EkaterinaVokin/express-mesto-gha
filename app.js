@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet'); // модуль для защиты приложения известных веб-уязвимостей
 const { ERROR_NOT_FOUND } = require('./constants');
+const { createUser, login } = require('./controllers/users');
 
 const app = express();
 
@@ -18,6 +19,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+app.post('/signin', login); // авторизация
+app.post('/signup', createUser); // регистрация
 
 app.use('/', require('./routes/users'));
 app.use('/', require('./routes/cards'));
