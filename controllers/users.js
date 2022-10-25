@@ -91,10 +91,43 @@ const updateAvatar = (req, res) => {
     });
 };
 
+// ищем пользователя
+const login = (req, res) => {
+  const { email, password } = req.body; // получили данные
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль')); // пользователь не найден отклоняем промис
+      }
+      return user; // возвращаем пользователя
+    })
+    // eslint-disable-next-line arrow-body-style
+    .then((user) => {
+      return bcrypt.compare(password, user.password) // сравниваем переданный пароль и хеш из БД
+        .then((matched) => {
+          if (!matched) {
+            return Promise.reject(new Error('Неправильные почта или пароль')); // хеши не совпали — отклоняем промис
+          }
+          const token = jwt.sign({ _id: user._id }, { expiresIn: '7d' }); // создаем токен если совпали емаил и пароль
+          return token; // возвращаем токен
+        });
+    })
+    .then((token) => {
+      res.send({ token }).cookie('jwt', token, {
+        maxAge: 3600000,
+        httpOnly: true,
+      }); // отправляем токен и сохраняем его в куках
+    })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
+    });
+};
+
 module.exports = {
   getUsers,
   getUserById,
   createUser,
   updateProfile,
   updateAvatar,
+  login,
 };
