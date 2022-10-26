@@ -13,14 +13,6 @@ app.use(helmet());
 
 const { PORT = 3000 } = process.env;
 
-// app.use((req, res, next) => {
-//   req.user = {
-//     _id: '63480ba1154a2b3491ed58c8',
-//   };
-
-//   next();
-// });
-
 app.post('/signin', login); // авторизация
 app.post('/signup', createUser); // регистрация
 
