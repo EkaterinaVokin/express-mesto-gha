@@ -125,6 +125,23 @@ const login = (req, res) => {
     });
 };
 
+// возвращать пользователя
+const getMe = (req, res) => {
+  User.findById(req.user._id).orFail(new Error('NotFound'))
+    .then((user) => {
+      res.send(user);
+    })
+    .catch((err) => {
+      if (err.message === 'NotFound') {
+        return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователя с запрошенным _id не существует' });
+      }
+      if (err instanceof mongoose.Error.CastError) {
+        return res.status(ERROR_BAD_REQUEST).send({ message: 'Не корректный _id' });
+      }
+      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
+    });
+};
+
 module.exports = {
   getUsers,
   getUserById,
@@ -132,4 +149,5 @@ module.exports = {
   updateProfile,
   updateAvatar,
   login,
+  getMe,
 };
