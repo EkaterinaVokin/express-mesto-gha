@@ -31,7 +31,11 @@ const createCard = (req, res) => {
 
 // удаляет карточку по идентификатору
 const deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId).orFail(new Error('NotFound'))
+  Card.findOneAndRemove({
+    _id: req.params.cardId,
+    owner: req.user._id,
+  })
+    .orFail(new Error('NotFound'))
     .then(() => {
       res.send({ message: 'Пост удален' });
     })
