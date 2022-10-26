@@ -45,7 +45,9 @@ const createUser = (req, res) => {
       });
     })
     .then((user) => {
-      res.status(201).send(user);
+      res.status(201).send({
+        _id: user._id, email: user.email, name: user.name, about: user.about, avatar: user.avatar,
+      });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
@@ -96,7 +98,7 @@ const updateAvatar = (req, res) => {
 // ищем пользователя
 const login = (req, res) => {
   const { email, password } = req.body; // получили данные
-  User.findOne({ email })
+  User.findOne({ email }).select('+password') // получить хеш пароль
     .then((user) => {
       if (!user) {
         return Promise.reject(new Error('Неправильные почта или пароль')); // пользователь не найден отклоняем промис
