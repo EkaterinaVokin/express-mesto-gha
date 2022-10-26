@@ -115,10 +115,11 @@ const login = (req, res) => {
         });
     })
     .then((token) => {
-      res.send({ token }).cookie('jwt', token, {
+      res.cookie('jwt', token, { // сохраняем токен в куках
         maxAge: 3600000,
         httpOnly: true,
-      }); // отправляем токен и сохраняем его в куках
+      });
+      res.send({ token }); // отправляем токен
     })
     .catch((err) => {
       res.status(401).send({ message: err.message });
