@@ -32,7 +32,7 @@ const getUserById = (req, res) => {
     });
 };
 
-// создаёт пользователя
+// создаёт пользователя регистрация
 const createUser = (req, res) => {
   const {
     name, about, avatar, email, password,
