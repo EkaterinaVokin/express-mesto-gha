@@ -1,39 +1,44 @@
+// eslint-disable-next-line arrow-body-style
 const { default: mongoose } = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const {
-  ERROR_NOT_FOUND, ERROR_BAD_REQUEST, ERROR_INTERNAL, JWT_SECRET,
-} = require('../constants');
+const { JWT_SECRET, MONGO_CODE } = require('../constants');
+const BadRequestError = require('../errors/bad-request-err');
+const NotFoundError = require('../errors/not-found-err');
+const ConflictingRequestError = require('../errors/conflicting-request-err');
+const UnauthorizedError = require('../errors/unauthorized-err');
 
 // возвращает всех пользователей
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
       res.send(users);
     })
-    .catch(() => res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' }));
+    .catch((err) => {
+      next(err);
+    });
 };
 
 // возвращает пользователя по _id
-const getUserById = (req, res) => {
-  User.findById(req.params.userId).orFail(new Error('NotFound'))
+const getUserById = (req, res, next) => {
+  User.findById(req.params.userId).orFail()
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователя с запрошенным _id не существует' });
+      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователя с запрошенным _id не существует'));
+      } else if (err instanceof mongoose.Error.CastError) {
+        next(new BadRequestError('Не корректный _id'));
+      } else {
+        next(err);
       }
-      if (err instanceof mongoose.Error.CastError) {
-        return res.status(ERROR_BAD_REQUEST).send({ message: 'Не корректный _id' });
-      }
-      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
     });
 };
 
-// создаёт пользователя регистрация
-const createUser = (req, res) => {
+// регистрация пользователя(создается пользователь)
+const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -50,72 +55,75 @@ const createUser = (req, res) => {
       });
     })
     .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        return res.status(ERROR_BAD_REQUEST).send({ message: 'Запрос был неправильно сформирован' });
+      if (err.code === MONGO_CODE) {
+        next(new ConflictingRequestError('Пользователь уже создан'));
+      } else if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError('Запрос был неправильно сформирован'));
+      } else {
+        next(err);
       }
-      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
     });
 };
 
 // обновляет профиль
-const updateProfile = (req, res) => {
+const updateProfile = (req, res, next) => {
   const owner = req.user._id; // _id пользователя
   const { name, about } = req.body;
-  User.findByIdAndUpdate(owner, { name, about }, { new: true, runValidators: true }).orFail(new Error('NotFound'))
+  User.findByIdAndUpdate(owner, { name, about }, { new: true, runValidators: true }).orFail()
     .then((newUser) => {
       res.send(newUser);
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        return res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+        next(new BadRequestError('Переданы некорректные данные при обновлении профиля'));
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователя с запрошенным _id не существует'));
+      } else {
+        next(err);
       }
-      if (err.message === 'NotFound') {
-        return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователя с запрошенным _id не существует' });
-      }
-      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
     });
 };
 
 // обновляет аватар
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const owner = req.user._id; // _id пользователя
   const { avatar } = req.body;
-  User.findByIdAndUpdate(owner, { avatar }, { new: true, runValidators: true }).orFail(new Error('NotFound'))
+  User.findByIdAndUpdate(owner, { avatar }, { new: true, runValidators: true }).orFail()
     .then((newAvatar) => {
       res.send(newAvatar);
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        return res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+        next(new BadRequestError('Переданы некорректные данные при обновлении профиля'));
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователя с запрошенным _id не существует'));
+      } else {
+        next(err);
       }
-      if (err.message === 'NotFound') {
-        return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователя с запрошенным _id не существует' });
-      }
-      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
     });
 };
 
-// ищем пользователя
-const login = (req, res) => {
+// авторизация пользователя
+const login = (req, res, next) => {
   const { email, password } = req.body; // получили данные
+  if (!email || !password) {
+    throw new BadRequestError('Некорретно переданы почта или пароль');
+  }
   User.findOne({ email }).select('+password') // получить хеш пароль
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль')); // пользователь не найден отклоняем промис
+        throw new UnauthorizedError('Неправильные почта или пароль'); // пользователь не найден
       }
       return user; // возвращаем пользователя
     })
-    // eslint-disable-next-line arrow-body-style
-    .then((user) => {
-      return bcrypt.compare(password, user.password) // сравниваем переданный пароль и хеш из БД
-        .then((matched) => {
-          if (!matched) {
-            return Promise.reject(new Error('Неправильные почта или пароль')); // хеши не совпали — отклоняем промис
-          }
-          const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' }); // создаем токен если совпали емаил и пароль
-          return token; // возвращаем токен
-        });
-    })
+    .then((user) => bcrypt.compare(password, user.password)
+      .then((matched) => {
+        if (!matched) { // если пароли не совпали
+          throw new UnauthorizedError('Неправильные почта или пароль');
+        }
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' }); // создаем токен если совпали емаил и пароль
+        return token; // возвращаем токен
+      }))
     .then((token) => {
       res.cookie('jwt', token, { // сохраняем токен в куках
         maxAge: 3600000,
@@ -124,24 +132,24 @@ const login = (req, res) => {
       res.send({ token }); // отправляем токен
     })
     .catch((err) => {
-      res.status(401).send({ message: err.message });
+      next(err);
     });
 };
 
 // возвращать пользователя
-const getMe = (req, res) => {
-  User.findById(req.user._id).orFail(new Error('NotFound'))
+const getMe = (req, res, next) => {
+  User.findById(req.user._id).orFail()
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователя с запрошенным _id не существует' });
+      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователя с запрошенным _id не существует'));
+      } else if (err instanceof mongoose.Error.CastError) {
+        next(new BadRequestError('Не корректный _id'));
+      } else {
+        next(err);
       }
-      if (err instanceof mongoose.Error.CastError) {
-        return res.status(ERROR_BAD_REQUEST).send({ message: 'Не корректный _id' });
-      }
-      return res.status(ERROR_INTERNAL).send({ message: 'Ошибка на стороне сервера' });
     });
 };
 
