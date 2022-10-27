@@ -29,6 +29,17 @@ app.use('*', (req, res) => {
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err; // ошибка на сервере по умолчанию
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'Ошибка на стороне сервера'
+        : message,
+    });
+});
 app.listen(PORT, () => {
   console.log('Сервер запущен на порту:', PORT);
 });
