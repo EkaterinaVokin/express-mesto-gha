@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet'); // модуль для защиты приложения известных веб-уязвимостей
-const { ERROR_NOT_FOUND } = require('./constants');
 const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 
@@ -24,7 +23,7 @@ app.use('/', require('./routes/cards'));
 
 // обработка несуществующих маршрутов
 app.use('*', (req, res) => {
-  res.status(ERROR_NOT_FOUND).send({ message: 'Запрашиваемый ресурс не найден' });
+  res.status(404).send({ message: 'Запрашиваемый ресурс не найден' });
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
@@ -40,6 +39,7 @@ app.use((err, req, res, next) => {
         : message,
     });
 });
+
 app.listen(PORT, () => {
   console.log('Сервер запущен на порту:', PORT);
 });
