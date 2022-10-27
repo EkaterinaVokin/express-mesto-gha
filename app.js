@@ -14,8 +14,24 @@ app.use(helmet()); // безопасность
 
 const { PORT = 3000 } = process.env;
 
-app.post('/signin', login); // авторизация
-app.post('/signup', createUser); // регистрация
+// авторизация
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), login);
+
+// регистрация
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().uri(),
+  }),
+}), createUser);
 
 // авторизация
 app.use(auth);
