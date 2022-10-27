@@ -6,16 +6,15 @@ const UnauthorizedError = require('../errors/unauthorized-err');
 module.exports = (req, res, next) => {
   const { authorization } = req.headers; // достаем токен из заголовка
   if (!authorization || !authorization.startsWith('Bearer ')) { // проверяем есть ли токен или токен пришле без заголовка Bearer
-    next(new UnauthorizedError('Необходима авторизация, отсутствует токен'));
+    return next(new UnauthorizedError('Необходима авторизация, отсутствует токен'));
   }
   const token = authorization.replace('Bearer ', ''); // извлечём токен, метод replace, чтобы выкинуть из заголовка приставку 'Bearer '
   let payload;
 
   try {
     payload = jwt.verify(token, JWT_SECRET); // верифицируем токен
-  } catch (err) {
-    next(new UnauthorizedError('Необходима авторизация, прислан не тот токен'));
-    next(err);
+  } catch {
+    return next(new UnauthorizedError('Необходима авторизация, прислан не тот токен'));
   }
   req.user = payload; // записываем пейлоуд в объект запроса
 
