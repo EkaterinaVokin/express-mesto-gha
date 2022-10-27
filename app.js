@@ -29,6 +29,9 @@ app.use('*', (req, res, next) => {
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
+// обработчики ошибок
+app.use(errors()); // обработчик ошибок celebrate
+
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err; // ошибка на сервере по умолчанию
