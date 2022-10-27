@@ -9,7 +9,7 @@ const app = express();
 
 app.use(express.json());
 
-app.use(helmet());
+app.use(helmet()); // безопасность
 
 const { PORT = 3000 } = process.env;
 
