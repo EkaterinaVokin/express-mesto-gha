@@ -41,7 +41,7 @@ app.use('/', require('./routes/cards'));
 
 // обработка несуществующих маршрутов
 app.use('*', (req, res, next) => {
-  next(new NotFoundError('Запрашиваемый ресурс не найден'));
+  next(new NotFoundError(`Запрашиваемый ресурс ${req.baseUrl} не найден`));
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
