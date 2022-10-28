@@ -3,6 +3,7 @@ const { default: mongoose } = require('mongoose');
 const Card = require('../models/card');
 const BadRequestError = require('../errors/bad-request-err');
 const NotFoundError = require('../errors/not-found-err');
+const ForbiddenError = require('../errors/forbidden-err');
 
 // возвращает все карточки
 const getCards = (req, res, next) => {
@@ -36,12 +37,12 @@ const createCard = (req, res, next) => {
 
 // удаляет карточку по идентификатору
 const deleteCard = (req, res, next) => {
-  Card.findOneAndRemove({
-    _id: req.params.cardId,
-    owner: req.user._id,
-  })
+  Card.findById(req.params.cardId)
     .orFail()
-    .then(() => {
+    .then((card) => {
+      if (card.owner !== req.user._id) {
+        throw new ForbiddenError('Удаление карточки другого пользователя');
+      }
       res.send({ message: 'Пост удален' });
     })
     .catch((err) => {
