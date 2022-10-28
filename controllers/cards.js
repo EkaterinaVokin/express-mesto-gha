@@ -37,7 +37,7 @@ const createCard = (req, res, next) => {
 
 // удаляет карточку по идентификатору
 const deleteCard = (req, res, next) => {
-  Card.findById(req.params.cardId)
+  Card.findByIdAndRemove(req.params.cardId)
     .orFail()
     .then((card) => {
       if (card.owner !== req.user._id) {
