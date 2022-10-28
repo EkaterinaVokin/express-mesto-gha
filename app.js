@@ -1,33 +1,65 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { celebrate, Joi, errors } = require('celebrate');
 const helmet = require('helmet'); // модуль для защиты приложения известных веб-уязвимостей
-const { ERROR_NOT_FOUND } = require('./constants');
+const { createUser, login } = require('./controllers/users');
+const auth = require('./middlewares/auth');
+const NotFoundError = require('./errors/not-found-err');
 
 const app = express();
 
 app.use(express.json());
 
-app.use(helmet());
+app.use(helmet()); // безопасность
 
 const { PORT = 3000 } = process.env;
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '63480ba1154a2b3491ed58c8',
-  };
+// авторизация
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), login);
 
-  next();
-});
+// регистрация
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().uri(),
+  }),
+}), createUser);
+
+// авторизация
+app.use(auth);
 
 app.use('/', require('./routes/users'));
 app.use('/', require('./routes/cards'));
 
 // обработка несуществующих маршрутов
-app.use('*', (req, res) => {
-  res.status(ERROR_NOT_FOUND).send({ message: 'Запрашиваемый ресурс не найден' });
+app.use('*', (req, res, next) => {
+  next(new NotFoundError('Запрашиваемый ресурс не найден'));
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
+
+// обработчики ошибок
+app.use(errors()); // обработчик ошибок celebrate
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err; // ошибка на сервере по умолчанию
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'Ошибка на стороне сервера'
+        : message,
+    });
+});
 
 app.listen(PORT, () => {
   console.log('Сервер запущен на порту:', PORT);

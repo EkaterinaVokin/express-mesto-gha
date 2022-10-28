@@ -8,23 +8,30 @@ const userSchema = new mongoose.Schema(
       type: String,
       minlength: 2,
       maxlength: 30,
-      required: true,
+      default: 'Жак-Ив Кусто',
     },
     about: {
       type: String,
       minlength: 2,
       maxlength: 30,
-      required: true,
+      default: 'Исследователь',
     },
     avatar: {
       type: String,
+      default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+      validate: (value) => /^https?:\/\/(www\.)?[\w\d-]+\.\w/.test(value),
+    },
+    email: {
+      type: String,
       required: true,
-      validate: (value) => {
-        if (validator.isURL(value)) {
-          return true;
-        }
-        return false;
-      },
+      unique: true,
+      validate: (value) => validator.isEmail(value),
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 8,
+      select: false,
     },
   },
   { versionKey: false },
