@@ -5,6 +5,7 @@ const helmet = require('helmet'); // модуль для защиты прило
 const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const NotFoundError = require('./errors/not-found-err');
+const { REGEX_URL } = require('./constants');
 
 const app = express();
 
@@ -29,7 +30,7 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri(),
+    avatar: Joi.string().pattern(REGEX_URL),
   }),
 }), createUser);
 
@@ -41,7 +42,7 @@ app.use('/', require('./routes/cards'));
 
 // обработка несуществующих маршрутов
 app.use('*', (req, res, next) => {
-  next(new NotFoundError('Запрашиваемый ресурс не найден'));
+  next(new NotFoundError(`Запрашиваемый ресурс ${req.baseUrl} не найден`));
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
