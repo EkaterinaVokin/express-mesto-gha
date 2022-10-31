@@ -37,12 +37,15 @@ const createCard = (req, res, next) => {
 
 // удаляет карточку по идентификатору
 const deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .orFail()
     .then((card) => {
       if (card.owner.toString() !== req.user._id) {
         throw new ForbiddenError('Удаление карточки другого пользователя');
       }
+      return card.remove();
+    })
+    .then(() => {
       res.send({ message: 'Пост удален' });
     })
     .catch((err) => {

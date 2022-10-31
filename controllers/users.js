@@ -106,9 +106,6 @@ const updateAvatar = (req, res, next) => {
 // авторизация пользователя
 const login = (req, res, next) => {
   const { email, password } = req.body; // получили данные
-  if (!email || !password) {
-    throw new BadRequestError('Некорретно переданы почта или пароль');
-  }
   User.findOne({ email }).select('+password') // получить хеш пароль
     .then((user) => {
       if (!user) {
@@ -129,7 +126,7 @@ const login = (req, res, next) => {
         maxAge: 3600000,
         httpOnly: true,
       });
-      res.send({ token }); // отправляем токен
+      res.send();
     })
     .catch((err) => {
       next(err);
