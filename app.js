@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
 const helmet = require('helmet'); // модуль для защиты приложения известных веб-уязвимостей
 const auth = require('./middlewares/auth');
+const centerErrors = require('./middlewares/ centerErrors'); // модуль обработка централизованных ошибок
 const NotFoundError = require('./errors/not-found-err');
 const routes = require('./routes/index'); // импортировать роуты регистарция и авторизация
 
@@ -33,17 +34,8 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 // обработчики ошибок
 app.use(errors()); // обработчик ошибок celebrate
 
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err; // ошибка на сервере по умолчанию
-  res
-    .status(statusCode)
-    .send({
-      message: statusCode === 500
-        ? 'Ошибка на стороне сервера'
-        : message,
-    });
-  next();
-});
+// обработчки централизованных ошибок
+app.use(centerErrors);
 
 app.listen(PORT, () => {
   console.log('Сервер запущен на порту:', PORT);
