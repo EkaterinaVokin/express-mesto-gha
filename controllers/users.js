@@ -126,7 +126,7 @@ const login = (req, res, next) => {
         maxAge: 3600000,
         httpOnly: true,
       });
-      res.send({ token }); // отправляем токен
+      res.send();
     })
     .catch((err) => {
       next(err);
