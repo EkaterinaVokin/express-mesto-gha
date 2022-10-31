@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
 const helmet = require('helmet'); // модуль для защиты приложения известных веб-уязвимостей
 const auth = require('./middlewares/auth');
@@ -11,6 +12,8 @@ const app = express();
 app.use(express.json());
 
 app.use(helmet()); // безопасность
+
+app.use(cookieParser()); // подключаем парсер кук как мидлвэр
 
 const { PORT = 3000 } = process.env;
 
