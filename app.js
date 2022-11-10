@@ -7,6 +7,7 @@ const auth = require('./middlewares/auth');
 const centerErrors = require('./middlewares/ centerErrors'); // модуль обработка централизованных ошибок
 const NotFoundError = require('./errors/not-found-err');
 const routes = require('./routes/index'); // импортировать роуты регистарция и авторизация
+const { requestLogger, errorLogger } = require('./middlewares/logger'); // логеры ошибок
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use(cookieParser()); // подключаем парсер кук как ми
 
 const { PORT = 3000 } = process.env;
 
+app.use(requestLogger); // подключаем логгер запросов
+
 // регистрация и авторизация
 app.use(routes);
 
@@ -28,6 +31,8 @@ app.use('/', auth, require('./routes/cards'));
 app.use('*', (req, res, next) => {
   next(new NotFoundError(`Запрашиваемый ресурс ${req.baseUrl} не найден`));
 });
+
+app.use(errorLogger); // подключаем логгер ошибок
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
